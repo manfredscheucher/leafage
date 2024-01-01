@@ -204,6 +204,8 @@ while 1:
 	if example:
 		if step == 0: augmenting_path = ['f,g,j','b,c,f','c,d,g']
 		if step == 1: augmenting_path = ['f,g,j', 'e,f']
+		
+	if debug:
 		print("*** augmenting_path:",augmenting_path)
 
 	if augmenting_path:
@@ -268,21 +270,15 @@ if representation:
 			a[i] = len(seq[i])
 			assert(a[i]) >= 1
 		assert(sum(a.values()) == 2*k-2)
-		if debug: print(f"a = {a}")
-
 		Ta = tree_from_sequence(a)
-		if debug: print("Ta",Ta.edges(labels=0))
 
 		for i,j in Ta.edges(labels=0):
 			R.add_edge(seq[i].pop(),seq[j].pop())
 
 		for i in range(k):
 			assert(len(seq[i]) == 0)
-
-		#R.plot().save("R1.png")
-		#exit()
 	
-	print("R",R.edges(labels=0))
+	print("representation:",R.edges(labels=0))
 
 	if debug:
 		R.plot(vertex_size=1000,figsize=10).save("R.png")
