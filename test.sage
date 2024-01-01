@@ -1,7 +1,7 @@
-# sage implementation of leafage
+# sage implementation of the leafage parameter for chordal graphs
 # following the article "Polynomial-Time Algorithm for the Leafage of Chordal Graphs" 
 # by M. Habib and J. Stacho, see https://doi.org/10.1007/978-3-642-04128-0_27
-# author: Manfred Scheucher and Helena Bergold 2024
+# authors: Manfred Scheucher and Helena Bergold, 2024
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -47,7 +47,6 @@ def str2set(x,symbol=','): return {y for y in x.split(symbol)}
 
 def create_clique_tree(G,peo):
 	n = len(G)
-
 	clique_tree = Graph()
 
 	for i in reversed(range(n)):
@@ -73,11 +72,11 @@ def create_clique_tree(G,peo):
 			else:
 				clique_tree.add_vertex(set2str(N|{v}))
 
-		#clique_tree.plot().save(f'clique_tree_{i}.png')
 	return clique_tree
 
 
-#T = create_clique_tree(G,peo)
+
+T = create_clique_tree(G,peo)
 
 if example:
 	T = Graph([('a,c', 'b,c,f'), 
@@ -88,6 +87,7 @@ if example:
 		('g,j,k', 'g,h'), 
 		('e,f', 'f,g,j'), 
 		('f,g,j', 'g,j,k')])
+
 
 G_pos = G.get_pos()
 T_pos = {}
