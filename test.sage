@@ -79,6 +79,7 @@ def create_clique_tree(G,peo):
 T = create_clique_tree(G,peo)
 
 if example:
+	# use this particular clique tree
 	T = Graph([('a,c', 'b,c,f'), 
 		('b,c,f', 'c,f,g'), 
 		('f,g,j', 'f,i'), 
@@ -89,12 +90,13 @@ if example:
 		('f,g,j', 'g,j,k')])
 
 
-G_pos = G.get_pos()
-T_pos = {}
-for C_str in T:
-	C = str2set(C_str)
-	T_pos[C_str] = sum(vector(G_pos[v]) for v in C)/len(C)
-T.set_pos(T_pos)
+if debug:
+	G_pos = G.get_pos()
+	T_pos = {}
+	for C_str in T:
+		C = str2set(C_str)
+		T_pos[C_str] = sum(vector(G_pos[v]) for v in C)/len(C)
+	T.set_pos(T_pos)
 
 
 
