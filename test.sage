@@ -10,8 +10,10 @@ from sys import argv
 from itertools import *
 from ast import literal_eval
 
-debug = False
-example = True
+debug = 1
+example = 1
+representation = 1
+verify_representation = 1
 
 if example:
 	G = Graph([(0, 1), (1, 2), (1, 3), (1, 4), (1, 5), (2, 4), (3, 5), (4, 5), (4, 6), (4, 9), (4, 10), (5, 6), (5, 7), (5, 8), (6, 7)])
@@ -30,7 +32,7 @@ if debug:
 	G.plot().save("G.png")
 	print("peo",peo)
 
-	for i in range(n):
+	for i in range(len(peo)):
 		v = peo[i]
 		N = set(G.neighbors(v))&set(peo[i:])
 		for a,b in combinations(N,2):
@@ -216,4 +218,76 @@ while 1:
 		break # minimal
 
 
-print("leafage = ",len({v for v in tau if len(tau[v])==1}))
+leafage = len({v for v in tau if len(tau[v])==1})
+print("leafage = ",leafage)
+
+
+def tree_from_sequence(a):
+	if len(a) <= 2:
+		Ta = Graph()
+		for v in a: Ta.add_vertex(v)
+		for u,v in combinations(a,2): Ta.add_edge(u,v)
+		return Ta
+	else:
+		for v in a:
+			if a[v] == 1:
+				for u in a:
+					if a[u] > 1:
+						Ta = tree_from_sequence({w:(a[w] if w != u else a[u]-1) for w in a if w != v})
+						Ta.add_edge(u,v)
+						return Ta
+		exit(f"invalid degree sequence: {a}")
+
+
+
+if representation:
+	R = Graph()
+	for v in T: 
+		R.add_vertex(v)
+
+	for t in H:
+		if debug: print(f"representation part for {t}")
+
+		if debug:
+			H2 = Graph()
+			for v in H[t]: H2.add_vertex(v)
+			for u,v in H[t].edges(labels=0): H2.add_edge(u,v)	
+			H2.relabel({v:v+": "+set2str(tau[v],symbol=" ") for v in T})
+			H2.plot(vertex_size=1000,figsize=10).save("foo.png")
+		
+		comps = H[t].connected_components()
+		k = len(comps)
+		a = {}
+		seq = {}
+		for i in range(k):
+			seq[i] = []
+			for v in comps[i]:
+				seq[i] += (tau[v].count(t))*[v]
+			a[i] = len(seq[i])
+			assert(a[i]) >= 1
+		assert(sum(a.values()) == 2*k-2)
+		if debug: print(f"a = {a}")
+
+		Ta = tree_from_sequence(a)
+		if debug: print("Ta",Ta.edges(labels=0))
+
+		for i,j in Ta.edges(labels=0):
+			R.add_edge(seq[i].pop(),seq[j].pop())
+
+		for i in range(k):
+			assert(len(seq[i]) == 0)
+
+		#R.plot().save("R1.png")
+		#exit()
+	
+	print("R",R.edges(labels=0))
+
+	if debug:
+		R.plot(vertex_size=1000,figsize=10).save("R.png")
+
+	if verify_representation:
+		for v in G:
+			C_v = [C for C in R if v in str2set(C)]
+			assert(R.subgraph(C_v).is_connected())
+		assert(R.degree().count(1) == leafage)
+		print("valid representation")
