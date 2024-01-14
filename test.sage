@@ -128,6 +128,14 @@ if 0:
 
 if 1:
 	print("precompute H_S graphs (later used to test connected components)")
+	intersection_hash = {}
+	for C1,C2 in combinations(sorted(T.vertices()),2):
+		C12 = set2str(str2set(C1)&str2set(C2))
+		if C12 not in intersection_hash:
+			intersection_hash[C12] = len(intersection_hash)
+		intersection_hash[C1,C2] = intersection_hash[C12]
+	if debug: print("intersection_hash",intersection_hash)
+
 	H = {}
 	for a,b in T.edges(labels=False):
 		S = str2set(a)&str2set(b) # intersections are minimal separators
@@ -137,11 +145,13 @@ if 1:
 			for v in T:
 				if str2set(v).issuperset(S):
 					H[S_str].add_vertex(v)
-			for C,C1 in combinations(H[S_str],2):
-				if str2set(C)&str2set(C1) != S:
-					H[S_str].add_edge(C,C1)
+			for C1,C2 in combinations(sorted(H[S_str]),2):
+				#if str2set(C1)&str2set(C2) != S:  # computing intersection takes linear time
+				if intersection_hash[C1,C2] != intersection_hash[S_str]: # lookup only takes constant/log time
+					H[S_str].add_edge(C1,C2)
 			if debug:
 				H[S_str].plot(vertex_size=vertex_size).save(f'H_{S_str}.png')
+				print(f"H {S_str} -> {H[S_str].edges(labels=0)}")
 
 	# precompute connected components
 	same_connected_component = {(C1,C2,t): H[t].distance(C1,C2) != Infinity for t in H for C1 in H[t] for C2 in H[t]}
@@ -209,7 +219,6 @@ while 1:
 
 	for P in D.shortest_simple_paths('dummy_start','dummy_end'): 
 		augmenting_path = P[1:-1]
-		print(P,"->",augmenting_path) 
 		break
 
 	if example:
