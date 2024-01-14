@@ -10,10 +10,11 @@ from sys import argv
 from itertools import *
 from ast import literal_eval
 
-debug = 1
+debug = 0
 example = 1
 representation = 1
 verify_representation = 1
+
 
 if example:
 	G = Graph([(0, 1), (1, 2), (1, 3), (1, 4), (1, 5), (2, 4), (3, 5), (4, 5), (4, 6), (4, 9), (4, 10), (5, 6), (5, 7), (5, 8), (6, 7)])
@@ -139,8 +140,11 @@ if 1:
 			for C,C1 in combinations(H[S_str],2):
 				if str2set(C)&str2set(C1) != S:
 					H[S_str].add_edge(C,C1)
-			#H[S_str].plot(vertex_size=vertex_size).save(f'H_{S_str}.png')
+			if debug:
+				H[S_str].plot(vertex_size=vertex_size).save(f'H_{S_str}.png')
 
+	# precompute connected components
+	same_connected_component = {(C1,C2,t): H[t].distance(C1,C2) != Infinity for t in H for C1 in H[t] for C2 in H[t]}
 
 
 step = 0
@@ -153,12 +157,10 @@ for a,b in T.edges(labels=False):
 	tau[a].append(ab)
 	tau[b].append(ab)
 
-
 while 1:
 	print()
-	print("step",step)
-	print(f"tau {tau}")
-	print("leafage <= ",len({v for v in tau if len(tau[v])==1}))
+	print("step",step,":  leafage <=",len({v for v in tau if len(tau[v])==1}))
+	if debug: print(f"tau {tau}")
 
 	if debug:
 		tokentree = copy(T)
@@ -169,22 +171,26 @@ while 1:
 	D = DiGraph()
 	#for v in T.vertices(): D.add_vertex(v)
 
-	def same_connected_component(C1,C2,t):
-		return H[t].distance(C1,C2) != Infinity
+	for C in T.vertices():
+		if len(tau[C])>= 2: 
+			# we can only shift from degree 2+ vertices 
 
-	for C,C1 in permutations(T.vertices(),int(2)):
-		if len(tau[C])>= 2: # we can only shift from degree 2+ vertices 
-			for t in set(tau[C]):
-				if str2set(t).issubset(str2set(C1)):
-					if same_connected_component(C,C1,t):
-						D.add_edge(C,C1,t)
-					elif tau[C].count(t) >= 2: # this case is missing in the original algorithm
-						D.add_edge(C,C1,t)
-					else:
-						for C2 in T.vertices():
-							if C2 != C and t in tau[C2] and same_connected_component(C,C2,t): 
-								D.add_edge(C,C1,t)
-								break
+			for t in set(tau[C]): 
+				# there exist only 2n-2 many pairs (C,t) because T is a tree
+
+				# precompute whether C2 exists
+				C2_exists = False
+				if tau[C].count(t) >= 2:
+					C2_exists = True
+				for C2 in T.vertices():
+					if C2 != C and t in tau[C2] and same_connected_component[C,C2,t]:
+						C2_exists = True
+						break
+
+				for C1 in H[t]:
+					if C1 != C:
+						if same_connected_component[C,C1,t] or C2_exists:
+							D.add_edge(C,C1,t)
 
 	if debug:
 		print("D:",D.edges(labels=1))
@@ -193,13 +199,18 @@ while 1:
 		D2.relabel({v:f"{v}/{len(tau[v])}" for v in D})
 		D2.plot(vertex_size=1000,edge_labels=1,figsize=20).save(f'D{step}.png')
 	
-	augmenting_path = None
-	for u,v in permutations(D,int(2)):
-		if len(tau[u]) >= 3 and len(tau[v]) == 1 and D.distance(u,v) != Infinity:
-			for P in D.shortest_simple_paths(u,v): 
-				augmenting_path = P
-				break
-		if augmenting_path: break
+	# compute augmented path
+	D_V = D.vertices()
+	D.add_vertex('dummy_start')
+	D.add_vertex('dummy_end')
+	for u in D_V:
+		if len(tau[u]) >= 3: D.add_edge('dummy_start',v)
+		if len(tau[v]) == 1: D.add_edge(v,'dummy_end')
+
+	for P in D.shortest_simple_paths('dummy_start','dummy_end'): 
+		augmenting_path = P[1:-1]
+		print(P,"->",augmenting_path) 
+		break
 
 	if example:
 		if step == 0: augmenting_path = ['f,g,j','b,c,f','c,d,g']
