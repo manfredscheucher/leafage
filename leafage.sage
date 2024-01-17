@@ -1,0 +1,299 @@
+# sage implementation of the leafage parameter for chordal graphs
+# following the article "Polynomial-Time Algorithm for the Leafage of Chordal Graphs" 
+# by M. Habib and J. Stacho, see https://doi.org/10.1007/978-3-642-04128-0_27
+# authors: Manfred Scheucher and Helena Bergold, 2024
+
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+from itertools import *
+
+def leafage(G0,certificate=0,debug=0):
+	G = copy(G0)
+	G.relabel({v:str(v) for v in G})
+
+	is_chordal,peo = G.is_chordal(certificate=True)
+	assert(is_chordal)
+
+
+	if debug >= 2:
+		print("peo",peo)
+
+	if debug >= 3:
+		G.plot().save("G.png")
+		for i in range(len(peo)):
+			v = peo[i]
+			N = set(G.neighbors(v))&set(peo[i:])
+			for a,b in combinations(N,2):
+				assert(G.has_edge(a,b)) # assert chordal
+		
+
+	def set2str(x,symbol=','): return symbol.join(sorted(x))
+	def str2set(x,symbol=','): return {y for y in x.split(symbol)}
+	#def set2str(x): return str(x)
+	#def str2set(x): return literal_eval(x)
+
+
+	def create_clique_tree(G,peo):
+		n = len(G)
+		clique_tree = Graph()
+
+		for i in reversed(range(n)):
+			v = peo[i]
+			N = set(G.neighbors(v))&set(peo[i:])
+
+			if set2str(N) in clique_tree:
+				if debug >= 2: print(f"extend previous maxclique {N} by {v}")
+				clique_tree.relabel({set2str(N):set2str(N|{v})})
+				
+			else:
+				if debug >= 2: print(f"create new maxclique {N|{v}}")
+
+				if clique_tree:
+					found = 0
+					for C_str in clique_tree:
+						if str2set(C_str).issuperset(N):
+							found += 1
+							clique_tree.add_edge(C_str,set2str(N|{v}))
+							break
+					assert(found)
+
+				else:
+					clique_tree.add_vertex(set2str(N|{v}))
+
+		return clique_tree
+
+
+
+	T = create_clique_tree(G,peo)
+	if debug >= 2: 
+		print("T",T.edges(labels=0))
+
+	if debug >= 3: 
+		G_pos = G.get_pos()
+		T_pos = {}
+		for C_str in T:
+			C = str2set(C_str)
+			T_pos[C_str] = sum(vector(G_pos[v]) for v in C)/len(C)
+		T.set_pos(T_pos)
+
+
+
+	if debug: 
+		print("start with clique tree",T.edges(labels=0))
+
+	if debug >= 2: 
+		vertex_size = 200*max(len(v) for v in T) # only for plotting
+		T.plot(vertex_size=vertex_size).save(f'clique_tree.png')
+
+	if 1:
+		if debug: 
+			print("precompute H_S graphs (later used to test connected components)")
+		intersection_hash = {}
+		for C1,C2 in combinations(sorted(T.vertices()),2):
+			C12 = set2str(str2set(C1)&str2set(C2))
+			if C12 not in intersection_hash:
+				intersection_hash[C12] = len(intersection_hash)
+			intersection_hash[C1,C2] = intersection_hash[C12]
+		if debug >= 2: print("intersection_hash",intersection_hash)
+
+		H = {}
+		for a,b in T.edges(labels=False):
+			S = str2set(a)&str2set(b) # intersections are minimal separators
+			S_str = set2str(S)
+			if S_str not in H:
+				H[S_str] = Graph()
+				for v in T:
+					if str2set(v).issuperset(S):
+						H[S_str].add_vertex(v)
+				for C1,C2 in combinations(sorted(H[S_str]),2):
+					#if str2set(C1)&str2set(C2) != S:  # computing intersection takes linear time
+					if intersection_hash[C1,C2] != intersection_hash[S_str]: # lookup only takes constant/log time
+						H[S_str].add_edge(C1,C2)
+				if debug >= 2:
+					H[S_str].plot(vertex_size=vertex_size).save(f'H_{S_str}.png')
+					print(f"H {S_str} -> {H[S_str].edges(labels=0)}")
+
+		# precompute connected components
+		same_connected_component = {(C1,C2,t): H[t].distance(C1,C2) != Infinity for t in H for C1 in H[t] for C2 in H[t]}
+
+
+	step = 0
+
+	# compute initial tau
+	tau = {v:[] for v in T.vertices()}
+
+	for a,b in T.edges(labels=False):
+		ab = set2str(str2set(a)&str2set(b)) # intersection
+		tau[a].append(ab)
+		tau[b].append(ab)
+
+	while 1:
+		if debug >= 2:
+			print("step",step,":  leafage <=",len({v for v in tau if len(tau[v])==1}))
+			print(f"tau {tau}")
+
+		if debug >= 3:
+			tokentree = copy(T)
+			tokentree.relabel({v:v+": "+set2str(tau[v],symbol=" ") for v in T})
+			token_vertex_size = 200*max(len(v) for v in tokentree) # only for plotting
+			tokentree.plot(vertex_size=token_vertex_size,figsize=20).save(f'tokentree{step}.png')
+
+		D = DiGraph()
+		#for v in T.vertices(): D.add_vertex(v)
+
+		for C in T.vertices():
+			if len(tau[C])>= 2: 
+				# we can only shift from degree 2+ vertices 
+
+				for t in set(tau[C]): 
+					# there exist only 2n-2 many pairs (C,t) because T is a tree
+
+					# precompute whether C2 exists
+					C2_exists = False
+					if tau[C].count(t) >= 2:
+						C2_exists = True
+					for C2 in T.vertices():
+						if C2 != C and t in tau[C2] and same_connected_component[C,C2,t]:
+							C2_exists = True
+							break
+
+					for C1 in H[t]:
+						if C1 != C:
+							if same_connected_component[C,C1,t] or C2_exists:
+								D.add_edge(C,C1,t)
+
+		if debug >= 2:
+			print("D:",D.edges(labels=1))
+		if debug >= 3:
+			D2 = DiGraph(D.edges())
+			#D2.set_pos(T_pos)
+			D2.relabel({v:f"{v}/{len(tau[v])}" for v in D})
+			D2.plot(vertex_size=1000,edge_labels=1,figsize=20).save(f'D{step}.png')
+		
+		# compute augmented path
+		D_V = D.vertices()
+		D.add_vertex('dummy_start')
+		D.add_vertex('dummy_end')
+		for v in D_V:
+			if len(tau[v]) >= 3: D.add_edge('dummy_start',v)
+			if len(tau[v]) == 1: D.add_edge(v,'dummy_end')
+
+		for P in D.shortest_simple_paths('dummy_start','dummy_end'): 
+			augmenting_path = P[1:-1]
+			break
+
+		if debug: 
+			print("*** augmenting_path:",augmenting_path)
+
+		if augmenting_path:
+			for i in range(1,len(augmenting_path)):
+				u = augmenting_path[i-1]
+				v = augmenting_path[i]
+				t = D.edge_label(u,v)
+				tau[u].remove(t)
+				tau[v].append(t)
+
+			step += 1
+			# repeat with new tau
+		else:
+			break # minimal
+
+
+	leafage = len({v for v in tau if len(tau[v])==1})
+	if debug: 
+		print("leafage = ",leafage)
+
+
+	def tree_from_sequence(a):
+		if len(a) <= 2:
+			Ta = Graph()
+			for v in a: Ta.add_vertex(v)
+			for u,v in combinations(a,2): Ta.add_edge(u,v)
+			return Ta
+		else:
+			for v in a:
+				if a[v] == 1:
+					for u in a:
+						if a[u] > 1:
+							Ta = tree_from_sequence({w:(a[w] if w != u else a[u]-1) for w in a if w != v})
+							Ta.add_edge(u,v)
+							return Ta
+			exit(f"invalid degree sequence: {a}")
+
+	if certificate:
+		R = Graph()
+		for v in T: 
+			R.add_vertex(v)
+
+		for t in H:
+			if debug >= 2: print(f"representation part for {t}")
+
+			if debug >= 2:
+				H2 = Graph()
+				for v in H[t]: H2.add_vertex(v)
+				for u,v in H[t].edges(labels=0): H2.add_edge(u,v)	
+				H2.relabel({v:v+": "+set2str(tau[v],symbol=" ") for v in T})
+				H2.plot(vertex_size=1000,figsize=10).save("foo.png")
+			
+			comps = H[t].connected_components()
+			k = len(comps)
+			a = {}
+			seq = {}
+			for i in range(k):
+				seq[i] = []
+				for v in comps[i]:
+					seq[i] += (tau[v].count(t))*[v]
+				a[i] = len(seq[i])
+				assert(a[i]) >= 1
+			assert(sum(a.values()) == 2*k-2)
+			Ta = tree_from_sequence(a)
+
+			for i,j in Ta.edges(labels=0):
+				R.add_edge(seq[i].pop(),seq[j].pop())
+
+			for i in range(k):
+				assert(len(seq[i]) == 0)
+		
+		if debug: 
+			print("representation:",R.edges(labels=0))
+
+		if debug >= 2:
+			R.plot(vertex_size=1000,figsize=10).save("R.png")
+
+		if debug:
+			# verify_representation
+			for v in G:
+				C_v = [C for C in R if v in str2set(C)]
+				assert(R.subgraph(C_v).is_connected())
+			assert(R.degree().count(1) == leafage)
+			if debug: 
+				print("valid representation")
+
+	return leafage if not certificate else (leafage,R)
+
+
+def leafage_upper(G):
+	simplicial = set()
+	X = []
+	for v in G:
+		Nv = G.neighbors(v)
+		if G.subgraph(Nv).is_clique():
+			simplicial.add(v)
+			X.append(Nv)
+
+	X2 = []
+	for x in X:
+		x2 = set(x)-simplicial
+		x2 = tuple(sorted(x2))
+		if x2 not in X2:
+			X2.append(x2)
+
+	D = [(x,y) for (x,y) in combinations(X2,2) if set(x).issubset(set(y))]
+	#print(D)
+	P = Poset(DiGraph(D))
+	return P.width()
+
+
+def leafage_lower(G):
+	return "astroidal number"

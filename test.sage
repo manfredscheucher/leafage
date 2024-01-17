@@ -77,11 +77,11 @@ def create_clique_tree(G,peo):
 
 
 
-T = create_clique_tree(G,peo)
+T0 = create_clique_tree(G,peo) # vertices are maxcliques
 
 if example:
 	# use this particular clique tree
-	T = Graph([('a,c', 'b,c,f'), 
+	T0 = Graph([('a,c', 'b,c,f'), 
 		('b,c,f', 'c,f,g'), 
 		('f,g,j', 'f,i'), 
 		('c,d,g', 'c,f,g'), 
@@ -91,14 +91,19 @@ if example:
 		('f,g,j', 'g,j,k')])
 
 
+maxclique_strings = list(sorted(T0.vertices()))
+m = len(maxclique_strings)
+
+# replace maxcliques by index up to n (to save linear factor)
+T = Graph([(iC1,iC2) for iC1,iC2 in combinations(range(m),2) if T0.has_edge(maxclique_strings[iC1],maxclique_strings[iC2])])
+
 if debug:
 	G_pos = G.get_pos()
 	T_pos = {}
-	for C_str in T:
-		C = str2set(C_str)
+	for iC in T:
+		C = str2set(maxclique_strings[iC])
 		T_pos[C_str] = sum(vector(G_pos[v]) for v in C)/len(C)
 	T.set_pos(T_pos)
-
 
 
 print("start with clique tree",T.edges(labels=0))
@@ -106,7 +111,6 @@ print("start with clique tree",T.edges(labels=0))
 if debug: 
 	vertex_size = 200*max(len(v) for v in T) # only for plotting
 	T.plot(vertex_size=vertex_size).save(f'clique_tree.png')
-
 
 
 if 0:
@@ -157,6 +161,8 @@ if 1:
 	same_connected_component = {(C1,C2,t): H[t].distance(C1,C2) != Infinity for t in H for C1 in H[t] for C2 in H[t]}
 
 
+
+exit()
 step = 0
 
 # compute initial tau
@@ -213,8 +219,8 @@ while 1:
 	D_V = D.vertices()
 	D.add_vertex('dummy_start')
 	D.add_vertex('dummy_end')
-	for u in D_V:
-		if len(tau[u]) >= 3: D.add_edge('dummy_start',v)
+	for v in D_V:
+		if len(tau[v]) >= 3: D.add_edge('dummy_start',v)
 		if len(tau[v]) == 1: D.add_edge(v,'dummy_end')
 
 	for P in D.shortest_simple_paths('dummy_start','dummy_end'): 
@@ -309,3 +315,6 @@ if representation:
 			assert(R.subgraph(C_v).is_connected())
 		assert(R.degree().count(1) == leafage)
 		print("valid representation")
+
+
+print("TODO: replace lists by integers to get n^3 time , currently n^4")
