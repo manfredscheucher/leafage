@@ -66,6 +66,9 @@ def leafage(G0,certificate=0,debug=0):
 
 
 	T = create_clique_tree(G,peo)
+	# TODO: replace vertices of T (which are maxcliques) by integers from 1 to n 
+	# to save a factor of n in memory and running time
+
 	if debug >= 2: 
 		print("T",T.edges(labels=0))
 
