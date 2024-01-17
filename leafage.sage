@@ -273,27 +273,66 @@ def leafage(G0,certificate=0,debug=0):
 	return leafage if not certificate else (leafage,R)
 
 
+def astroidal_triples(G):
+	AT = set()
+	V = set(G.vertices())
+	for a,b,c in combinations(sorted(V),3):
+		Ga = G.subgraph(V-{a})
+		Gb = G.subgraph(V-{b})
+		Gc = G.subgraph(V-{c})
+		if Ga.distance(b,c) < Infinity and Gb.distance(a,c) < Infinity and Gc.distance(a,b) < Infinity:
+			AT.add((a,b,c))
+	return AT
+
+
+def max_astroidal_sets(AT,remaining,selection=tuple()):
+	extension = False
+	for u in remaining:
+		valid = True
+		for a,b in combinations(selection,2):
+			if (a,b,u) not in AT:
+				valid = False
+				break
+		if valid:
+			for AS in max_astroidal_sets(AT,remaining=[v for v in remaining if v > u],selection=selection+(u,)):
+				extension = True
+				yield AS
+	if not extension:
+		yield selection
+
+
+def astroidal_number(G):
+	AT = astroidal_triples(G)
+	V = list(sorted(G.vertices()))
+	max_AS = list(max_astroidal_sets(AT,remaining=V))
+	#print("max_AS",max_AS)
+	return max(len(AS) for AS in max_AS)
+
+
+def leafage_lower(G):
+	return astroidal_number(G)
+
+
+
+def simplicial_vertices(G):
+	return {v for v in G if G.subgraph(G.neighbors(v)).is_clique()}
+
+
 def leafage_upper(G):
-	simplicial = set()
+	exit("something is broken")
+	simplicial = simplicial_vertices(G)
+
 	X = []
-	for v in G:
-		Nv = G.neighbors(v)
-		if G.subgraph(Nv).is_clique():
-			simplicial.add(v)
-			X.append(Nv)
+	for v in simplicial:
+		x = set(G.neighbors(v))-simplicial
+		x = tuple(sorted(x))
+		if x not in X:
+			X.append(x)
 
-	X2 = []
-	for x in X:
-		x2 = set(x)-simplicial
-		x2 = tuple(sorted(x2))
-		if x2 not in X2:
-			X2.append(x2)
-
-	D = [(x,y) for (x,y) in combinations(X2,2) if set(x).issubset(set(y))]
-	#print(D)
+	print(X)
+	D = [(x,y) for (x,y) in combinations(X,2) if set(x).issubset(set(y))]
+	print(D)
 	P = Poset(DiGraph(D))
 	return P.width()
 
 
-def leafage_lower(G):
-	return "astroidal number"
