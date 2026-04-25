@@ -4,12 +4,12 @@ This repository provides a **SageMath implementation** of the *leafage* algorith
 based on the paper *"Polynomial-Time Algorithm for the Leafage of Chordal Graphs"* by **Michel Habib** and **Juraj Stacho**,
 DOI: [10.1007/978-3-642-04128-0_27](https://doi.org/10.1007/978-3-642-04128-0_27).
 
-## Contents
+## Content
 
 * `leafage.sage` — main implementation of the leafage algorithm
 * `enum_l4.sage` — auxiliary routines (e.g. enumeration)
-* `ipe2graph2.sage` — converter: reads IPE (`.ipe`) drawings and builds a Sage `Graph` (wrapper around the `ipe2graph` submodule)
 * `ipe2graph/` — git submodule: [manfredscheucher/ipe2graph](https://github.com/manfredscheucher/ipe2graph)
+* `ipe2graph2.sage` — converter: reads IPE (`.ipe`) drawings and builds a Sage `Graph` (wrapper around the `ipe2graph` submodule)
 * `test.sage` — test suite with example chordal graphs
 * `example.ipe` — example IPE file for building a graph
 
