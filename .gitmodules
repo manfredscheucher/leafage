@@ -1,0 +1,3 @@
+[submodule "ipe2graph"]
+	path = ipe2graph
+	url = https://github.com/manfredscheucher/ipe2graph

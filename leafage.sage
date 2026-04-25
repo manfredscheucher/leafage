@@ -273,7 +273,7 @@ def leafage(G0,certificate=0,debug=0):
 			if debug: 
 				print("valid representation")
 
-	return leafage if not certificate else (leafage,R)
+	return (leafage,T) if not certificate else (leafage,T,R)
 
 
 def astroidal_triples(G):
