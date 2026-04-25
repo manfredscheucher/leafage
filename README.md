@@ -8,8 +8,7 @@ DOI: [10.1007/978-3-642-04128-0_27](https://doi.org/10.1007/978-3-642-04128-0_27
 
 * `leafage.sage` — main implementation of the leafage algorithm
 * `enum_l4.sage` — auxiliary routines (e.g. enumeration)
-* `ipe2graph/` — git submodule: [manfredscheucher/ipe2graph](https://github.com/manfredscheucher/ipe2graph)
-* `ipe2graph2.sage` — converter: reads IPE (`.ipe`) drawings and builds a Sage `Graph` (wrapper around the `ipe2graph` submodule)
+* `ipe2graph/` — git submodule: [manfredscheucher/ipe2graph](https://github.com/manfredscheucher/ipe2graph), provides `ipe2graph()` function
 * `test.sage` — test suite with example chordal graphs
 * `example.ipe` — example IPE file for building a graph
 
@@ -47,10 +46,10 @@ L, T, R = leafage(G, certificate=True)
 ### Using an IPE file as input
 
 ```sage
-load("ipe2graph2.sage")
+load("ipe2graph/ipe2graph2.sage")
 load("leafage.sage")
 
-G = ipe_to_graph("example.ipe")
+G = ipe2graph("example.ipe")
 L, T = leafage(G)
 print("Leafage:", L)
 ```
@@ -74,7 +73,7 @@ Computes the leafage of a chordal graph `G`.
 * Returns `(L, T)` where `L` is the leafage value and `T` is the clique tree
 * Returns `(L, T, R)` if `certificate=True`, where `R` is the representation tree
 
-### `ipe_to_graph(path)`
+### `ipe2graph(path)`
 
 Reads an IPE drawing from `path` and returns a SageMath `Graph`.
 

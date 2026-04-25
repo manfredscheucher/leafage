@@ -5,6 +5,7 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 load("leafage.sage")
+load("ipe2graph/ipe2graph2.sage")
 
 def test(G, expected_leafage):
 	L, T = leafage(G)
@@ -24,5 +25,10 @@ test(G, 4)
 
 # simple chordal graph
 test(Graph({0: [1, 2], 1: [2], 2: [3], 3: []}), 1)
+
+# IPE file as input
+G = ipe2graph("example.ipe")
+assert G.num_verts() > 0
+print(f"OK: ipe2graph loaded {G.num_verts()} vertices, {G.num_edges()} edges")
 
 print("all tests passed")
