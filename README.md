@@ -85,6 +85,7 @@ sage enumerate.sage -n 6 -c -llow 3 --plot
 | `-llow L` | leafage ≥ L |
 | `-lupp U` | leafage ≤ U |
 | `-ig`, `--interval-graph` | interval graphs only (sets `-lupp 2`) |
+| `-opt`, `--optimized` | use `leafage_optimized.sage` instead of `leafage.sage` |
 | `--plot` | save each match as `graph_n<n>_<i>.png` |
 
 **OEIS references** for connected chordal graphs on n vertices:

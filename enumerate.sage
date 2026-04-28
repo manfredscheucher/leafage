@@ -1,8 +1,6 @@
 import argparse
 import sys
 
-load("leafage.sage")
-
 # Known OEIS sequences for connected chordal graphs on n vertices:
 #   chordal graphs: https://oeis.org/A048193 : 1, 2, 4, 10, 27, 94, 393, 2119
 #   interval graphs: https://oeis.org/A005975 : 1, 2, 4, 10, 27, 92, 369, 1807
@@ -23,9 +21,16 @@ parser.add_argument("-ig", "--interval-graph", action="store_true",
                     help="interval graphs only (equivalent to -lupp 2, see OEIS A005975)")
 parser.add_argument("-c", "--connected", action="store_true",
                     help="connected graphs only")
+parser.add_argument("-opt", "--optimized", action="store_true",
+                    help="use leafage_optimized.sage instead of leafage.sage")
 parser.add_argument("--plot", action="store_true",
                     help="save each matching graph as PNG (graph_n<n>_<i>.png)")
 args = parser.parse_args()
+
+if args.optimized:
+    load("leafage_optimized.sage")
+else:
+    load("leafage.sage")
 
 n = args.n
 llow = args.llow
