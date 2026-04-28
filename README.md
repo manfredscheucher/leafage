@@ -59,20 +59,20 @@ print("Leafage:", L)
 `enumerate.sage` enumerates chordal graphs on `n` vertices and prints them in sparse6 format (stdout), with status info on stderr.
 
 ```bash
-# all chordal graphs on 7 vertices
+# all chordal graphs on 7 vertices (cf. https://oeis.org/A048193)
 sage enumerate.sage -n 7
 
 # connected only, leafage >= 4
 sage enumerate.sage -n 7 -c -llow 4
+
+# interval graphs (leafage <= 2, cf. http://oeis.org/A005975)
+sage enumerate.sage -n 7  -ig
 
 # interval graphs (leafage <= 2), connected
 sage enumerate.sage -n 7 -c -ig
 
 # save matching graphs as PNGs
 sage enumerate.sage -n 6 -c -llow 3 --plot
-
-# pipe into other tools
-sage enumerate.sage -n 8 -c | wc -l
 ```
 
 **Options:**
