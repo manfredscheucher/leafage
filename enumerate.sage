@@ -4,15 +4,15 @@ import sys
 load("leafage.sage")
 
 # Known OEIS sequences for connected chordal graphs on n vertices:
-#   chordal graphs : https://oeis.org/A048193 : 1, 2, 4, 10, 27, 94, 393, 2119
+#   chordal graphs: https://oeis.org/A048193 : 1, 2, 4, 10, 27, 94, 393, 2119
 #   interval graphs: https://oeis.org/A005975 : 1, 2, 4, 10, 27, 92, 369, 1807
 
 parser = argparse.ArgumentParser(
     description="Enumerate connected chordal graphs by leafage (outputs sparse6)",
     epilog=(
         "OEIS references for connected chordal graphs on n vertices:\n"
-        "  all chordal  (leafage >= 2): A048193 -- 1, 2, 4, 10, 27, 94, 393, 2119\n"
-        "  interval     (leafage <= 2): A005975 -- 1, 2, 4, 10, 27, 92, 369, 1807\n"
+        "  all chordal: A048193 -- 1, 2, 4, 10, 27, 94, 393, 2119\n"
+        "  interval    (leafage <= 2): A005975 -- 1, 2, 4, 10, 27, 92, 369, 1807\n"
     ),
     formatter_class=argparse.RawDescriptionHelpFormatter,
 )
