@@ -14,7 +14,7 @@ for g in graphs.nauty_geng(f"{n} -c"):
 	if len(simplicial_vertices(g)) < 4: continue
 	#if leafage_upper(g) < 4: continue
 	#print("test graph",gs)
-	l,representation = leafage(g,certificate=1)
+	l,_,representation = leafage(g,certificate=1)
 	if l >= 4:
 		ct += 1
 		print(gs)

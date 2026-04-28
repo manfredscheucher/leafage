@@ -182,7 +182,8 @@ def leafage(G0,certificate=0,debug=0):
 			if len(tau[v]) >= 3: D.add_edge('dummy_start',v)
 			if len(tau[v]) == 1: D.add_edge(v,'dummy_end')
 
-		for P in D.shortest_simple_paths('dummy_start','dummy_end'): 
+		augmenting_path = []
+		for P in D.shortest_simple_paths('dummy_start','dummy_end'):
 			augmenting_path = P[1:-1]
 			break
 
