@@ -7,7 +7,7 @@ DOI: [10.1007/978-3-642-04128-0_27](https://doi.org/10.1007/978-3-642-04128-0_27
 ## Content
 
 * `leafage.sage` — main implementation of the leafage algorithm
-* `enum_l4.sage` — auxiliary routines (e.g. enumeration)
+* `enumerate.sage` — enumerate chordal graphs by leafage (see below)
 * `ipe2graph/` — git submodule: [manfredscheucher/ipe2graph](https://github.com/manfredscheucher/ipe2graph), provides `ipe2graph()` function
 * `test.sage` — test suite with example chordal graphs
 * `example.ipe` — example IPE file for building a graph
@@ -53,6 +53,42 @@ G = ipe2graph("example.ipe")
 L, T = leafage(G)
 print("Leafage:", L)
 ```
+
+### Enumerating chordal graphs by leafage
+
+`enumerate.sage` enumerates chordal graphs on `n` vertices and prints them in sparse6 format (stdout), with status info on stderr.
+
+```bash
+# all chordal graphs on 7 vertices
+sage enumerate.sage -n 7
+
+# connected only, leafage >= 4
+sage enumerate.sage -n 7 -c -llow 4
+
+# interval graphs (leafage <= 2), connected
+sage enumerate.sage -n 7 -c -ig
+
+# save matching graphs as PNGs
+sage enumerate.sage -n 6 -c -llow 3 --plot
+
+# pipe into other tools
+sage enumerate.sage -n 8 -c | wc -l
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-n N` | number of vertices (required) |
+| `-c`, `--connected` | connected graphs only |
+| `-llow L` | leafage ≥ L |
+| `-lupp U` | leafage ≤ U |
+| `-ig`, `--interval-graph` | interval graphs only (sets `-lupp 2`) |
+| `--plot` | save each match as `graph_n<n>_<i>.png` |
+
+**OEIS references** for connected chordal graphs on n vertices:
+* all chordal (leafage ≥ 2): [A048193](https://oeis.org/A048193) — 1, 2, 4, 10, 27, 94, 393, 2119, …
+* interval (leafage ≤ 2): [A005975](https://oeis.org/A005975) — 1, 2, 4, 10, 27, 92, 369, 1807, …
 
 ### Running tests
 
