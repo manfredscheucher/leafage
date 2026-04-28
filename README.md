@@ -7,6 +7,7 @@ DOI: [10.1007/978-3-642-04128-0_27](https://doi.org/10.1007/978-3-642-04128-0_27
 ## Content
 
 * `leafage.sage` — main implementation of the leafage algorithm
+* `leafage_optimized.sage` — performance-optimized variant (integer-keyed cliques, see below)
 * `enumerate.sage` — enumerate chordal graphs by leafage (see below)
 * `ipe2graph/` — git submodule: [manfredscheucher/ipe2graph](https://github.com/manfredscheucher/ipe2graph), provides `ipe2graph()` function
 * `test.sage` — test suite with example chordal graphs
@@ -116,7 +117,11 @@ Reads an IPE drawing from `path` and returns a SageMath `Graph`.
 ## Notes
 
 * The algorithm assumes the input graph is **chordal**.
-* Internally, clique-tree nodes are represented as comma-separated strings of vertex labels; using integer indices could improve performance.
+* `leafage_optimized.sage` provides a performance-optimized variant (see below).
+
+## Performance-optimized variant
+
+`leafage_optimized.sage` is a drop-in replacement for `leafage.sage` with the same API: In `leafage.sage`, clique-tree nodes are represented as comma-separated strings (e.g. `"0,1,2"`), which are repeatedly constructed, split, and converted to sets throughout the algorithm — costing O(n) per operation. In `leafage_optimized.sage`, each unique clique (and separator) is registered once in a `clique2id`/`id2clique` dictionary and identified by an integer thereafter. All internal data structures (`tau`, `H`, `same_connected_component`, etc.) work exclusively with these integers. The string labels are only reconstructed at the very end for the return values, preserving full compatibility with existing callers.
 
 ---
 
