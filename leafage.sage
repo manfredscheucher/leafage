@@ -66,8 +66,12 @@ def leafage(G0,certificate=0,debug=0):
 
 
 	T = create_clique_tree(G,peo)
-	# TODO: replace vertices of T (which are maxcliques) by integers from 1 to n 
-	# to save a factor of n in memory and running time
+	# NOTE: replacing clique-tree vertices (strings) by integers was tested (Claude, 2025)
+	# but string operations are not the bottleneck (~2% of runtime per cProfile).
+	# Real bottlenecks are: repeated DiGraph construction in the while-loop (add_edge +
+	# DiGraph.__init__), vertex_iterator calls, and shortest_simple_paths (which internally
+	# calls DiGraph.reverse). To get a real speedup, D should be updated incrementally
+	# instead of rebuilt each iteration, or shortest_simple_paths replaced by a plain BFS.
 
 	if debug >= 2: 
 		print("T",T.edges(labels=0))

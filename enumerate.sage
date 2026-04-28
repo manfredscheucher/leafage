@@ -21,16 +21,11 @@ parser.add_argument("-ig", "--interval-graph", action="store_true",
                     help="interval graphs only (equivalent to -lupp 2, see OEIS A005975)")
 parser.add_argument("-c", "--connected", action="store_true",
                     help="connected graphs only")
-parser.add_argument("-opt", "--optimized", action="store_true",
-                    help="use leafage_optimized.sage instead of leafage.sage")
 parser.add_argument("--plot", action="store_true",
                     help="save each matching graph as PNG (graph_n<n>_<i>.png)")
 args = parser.parse_args()
 
-if args.optimized:
-    load("leafage_optimized.sage")
-else:
-    load("leafage.sage")
+load("leafage.sage")
 
 n = args.n
 llow = args.llow
